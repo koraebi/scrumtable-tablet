@@ -1,22 +1,38 @@
-import React from 'react';
-import io from 'socket.io-client';
-import {Alert, Button, StyleSheet, Text, View} from 'react-native';
-
+import React, {useState} from 'react';
+//import io from 'socket.io-client';
+import {Button, FlatList, StyleSheet, Text, View} from 'react-native';
 export default function App() {
-  const socket = io('http://localhost:3000');
+  const [data, setData] = useState<any[]>([]);
+  console.log(data);
 
-  socket.on('message', (message: string | undefined) => {
-    Alert.alert('Message', message);
-  });
+  const getIssuesFromApi = () => {
+    return fetch('http://192.168.1.80:3000/issues')
+      .then(response => response.json())
+      .then(json => setData(json))
+      .then(response => {
+        console.log(response);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.RectangleShapeViewIssues}>
-        <Text>ALL THE ISSUES</Text>
+        <View style={styles.box}>
+          <FlatList
+            data={data}
+            renderItem={({item}) => (
+              <Text>
+                {item.name}, {item.selected}
+              </Text>
+            )}
+          />
+        </View>
       </View>
       <View style={styles.RectangleShapeViewIssue}>
-        <Text>SELECTED ISSUE</Text>
-        <Button title="Issue" onPress={() => socket.emit('message', 'Touch')} />
+        <Button title="issues" onPress={() => getIssuesFromApi()} />
       </View>
       <View style={styles.matrix}>
         <View style={styles.must} />
@@ -33,7 +49,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#99A3A4',
+    backgroundColor: '#85728A',
     alignItems: 'center',
     padding: 10,
     justifyContent: 'space-between',
@@ -52,6 +68,10 @@ const styles = StyleSheet.create({
     height: 120,
     padding: 10,
     backgroundColor: '#CD7DDD',
+  },
+  box: {
+    width: 100,
+    height: 100,
   },
   matrix: {
     flex: 2,
