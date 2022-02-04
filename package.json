@@ -10,9 +10,15 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "EventEmitter": "^1.0.0",
+    "events": "^3.3.0",
     "react": "17.0.2",
-    "react-native": "^0.66.4",
+    "react-native": "^0.67.2",
+    "react-native-elements": "^3.4.2",
+    "react-native-event-listeners": "^1.0.7",
+    "react-native-safe-area-context": "^3.3.2",
     "react-native-snap-carousel": "^3.9.1",
+    "react-native-vector-icons": "^9.0.0",
     "socket.io-client": "^4.4.1"
   },
   "devDependencies": {
