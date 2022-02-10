@@ -16,11 +16,6 @@ export function parseIssuesInfo(json) {
   let shouldData = [];
   let couldData = [];
   let wontData = [];
-  //this.name = name;
-  //this.description = description;
-  //this.number = number;
-  //this.selected = selected;
-  //this.moscow = Moscow.moscow;
   for (let i = 0; i < json.length; i++) {
     if (json[i].moscow === undefined) {
       availableData.push(
@@ -32,7 +27,7 @@ export function parseIssuesInfo(json) {
           json[i].moscow,
         ),
       );
-    } else if (json[i].moscow === Moscow.MUST) {
+    } else if (json[i].moscow === 'Must') {
       mustData.push(
         new Issue(
           json[i].name,
@@ -42,7 +37,7 @@ export function parseIssuesInfo(json) {
           json[i].moscow,
         ),
       );
-    } else if (json[i].moscow === Moscow.SHOULD) {
+    } else if (json[i].moscow === 'Should') {
       shouldData.push(
         new Issue(
           json[i].name,
@@ -52,7 +47,7 @@ export function parseIssuesInfo(json) {
           json[i].moscow,
         ),
       );
-    } else if (json[i].moscow === Moscow.COULD) {
+    } else if (json[i].moscow === 'Could') {
       couldData.push(
         new Issue(
           json[i].name,
@@ -62,7 +57,7 @@ export function parseIssuesInfo(json) {
           json[i].moscow,
         ),
       );
-    } else if (json[i].moscow === Moscow.WONT) {
+    } else if (json[i].moscow === "Won't") {
       wontData.push(
         new Issue(
           json[i].name,
