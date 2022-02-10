@@ -5,6 +5,6 @@ export class Moscow {
   static WONT = new Moscow("Won't");
 
   constructor(name) {
-    this.name = name
+    this.name = name;
   }
 }
