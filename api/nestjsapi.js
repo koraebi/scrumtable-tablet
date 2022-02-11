@@ -2,7 +2,27 @@ import {Moscow} from '../src/enum/moscow';
 import {Issue} from '../src/model/Issue';
 
 export function getIssuesFromApi() {
-  return fetch('http://192.168.1.81:3000/issues')
+  return fetch('http://52.88.52.11:3000/issues')
+    .then(response => response.json())
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+export function addLabelToIssue(issue, newLabel) {
+  return fetch('http://52.88.52.11:3000/issues/' + issue.id + "/" + newLabel, {
+    method: 'POST'
+  })
+    .then(response => response.json())
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+export function removeLabelToIssue(issue) {
+  return fetch('http://52.88.52.11:3000/issues/' + issue.id + "/" + issue.moscow, {
+    method: 'DELETE'
+  })
     .then(response => response.json())
     .catch(error => {
       console.error(error);

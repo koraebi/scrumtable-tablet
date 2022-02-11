@@ -1,196 +1,94 @@
-import {Button, FlatList, StyleSheet, Text, View} from 'react-native';
 import React, {Component} from 'react';
-import {getIssuesFromApi, parseIssuesInfo} from '../../api/nestjsapi';
+import { getIssuesFromApi, parseIssuesInfo, removeLabelToIssue, addLabelToIssue } from '../../api/nestjsapi';
 import SocketIO from '../socket/socketio';
 import EventEmitter from 'events';
-import {Card, Title, Paragraph} from 'react-native-elements';
+import { Board, BoardRepository } from 'react-native-draganddrop-board'
+
+let boardRepository;
 
 class HomeScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
       event: new EventEmitter(),
-      socket: new SocketIO(this.event),
-      issues: [],
+      socket: new SocketIO(this.event)
     };
   }
 
   handler(arg) {
-    for (let i = 0; i < this.state.issues.length; i++) {
-      for (let j = 0; j < this.state.issues[i].length; j++) {
-        if (this.state.issues[i][j].name === arg) {
-          this.state.issues[i][j].selected = true;
-          return;
-        }
-      }
-    }
+    console.log(arg);
+    this.loadIssues();
+    this.boardRepository.updateData(this.state.board);
+  }
+
+  loadIssues() {
+    getIssuesFromApi().then(rawJson => {
+      this.setState({
+        board: [
+          {
+            id: 1,
+            name: 'MUST',
+            rows: parseIssuesInfo(rawJson)[1]
+          },
+          {
+            id: 2,
+            name: 'SHOULD',
+            rows: parseIssuesInfo(rawJson)[2]
+          },
+          {
+            id: 3,
+            name: 'COULD',
+            rows: parseIssuesInfo(rawJson)[3]
+          },
+          {
+            id: 4,
+            name: "WON'T",
+            rows: parseIssuesInfo(rawJson)[4]
+          },
+          {
+            id: 5,
+            name: "A PRIORISER",
+            rows: parseIssuesInfo(rawJson)[0]
+          }
+        ]
+      });
+    });
   }
 
   componentDidMount() {
     this.state.socket.connect();
     this.state.socket.listen();
     this.state.event.addListener('event-name', this.handler);
-    getIssuesFromApi().then(rawJson => {
-      this.setState({
-        issues: parseIssuesInfo(rawJson),
-      });
-    });
-  }
-  _displayIssues() {
-    const issues = this.state.issues;
-    return (
-      <FlatList
-        data={this.state.issues[0]}
-        renderItem={({item}) => (
-          <Card bottomRightText="30 km">
-            <Text style={{color: '#000000', paddingVertical: 10}}>
-              {item.name}
-            </Text>
-          </Card>
-        )}
-      />
-    );
+    this.loadIssues();
+    
   }
 
-  _displayMust() {
-    return (
-      <FlatList
-        data={this.state.issues[1]}
-        renderItem={({item}) => (
-          <Card style={styles.boxIssues}>
-            <Text style={{color: '#000000', paddingVertical: 10}}>
-              {item.name}
-            </Text>
-          </Card>
-        )}
-      />
-    );
-  }
-
-  _displayShould() {
-    return (
-      <FlatList
-        data={this.state.issues[2]}
-        renderItem={({item}) => (
-          <Card>
-            <Text style={{color: '#000000', paddingVertical: 10}}>
-              {item.name}
-            </Text>
-          </Card>
-        )}
-      />
-    );
-  }
-  _displayCould() {
-    return (
-      <FlatList
-        data={this.state.issues[3]}
-        renderItem={({item}) => (
-          <Card>
-            <Text style={{color: '#000000', paddingVertical: 10}}>
-              {item.name}
-            </Text>
-          </Card>
-        )}
-      />
-    );
-  }
-
-  _displayWont() {
-    return (
-      <FlatList
-        data={this.state.issues[4]}
-        renderItem={({item}) => (
-          <Card>
-            <Text style={{color: '#000000', paddingVertical: 10}}>
-              {item.name}
-            </Text>
-          </Card>
-        )}
-      />
-    );
-  }
   render() {
+    boardRepository = new BoardRepository(this.state.board);
+    const labels = ['', 'MUST', 'SHOULD', 'COULD', "WONT", 'x'];
+
     return (
-      <View style={styles.container}>
-        <View style={styles.RectangleShapeViewIssues}>
-          <Button
-            title="Send Message"
-            onPress={() => this.state.socket.sendMessage()}
-          />
-          <View style={styles.box}>{this._displayIssues()}</View>
-        </View>
-        <View style={styles.RectangleShapeViewIssue}></View>
-        <View style={styles.matrix}>
-          <View style={styles.must}>
-            <View style={styles.box}>{this._displayMust()}</View>
-          </View>
-          <View style={styles.should}>
-            <View style={styles.box}>{this._displayShould()}</View>
-          </View>
-        </View>
-        <View style={styles.matrix}>
-          <View style={styles.could}>
-            <View style={styles.box}>{this._displayCould()}</View>
-          </View>
-          <View style={styles.wont}>
-            <View style={styles.box}>{this._displayWont()}</View>
-          </View>
-        </View>
-      </View>
+      <Board
+        boardRepository={boardRepository}
+        open={() => {
+          this.state.socket.sendMessage();
+        }}
+        onDragEnd={(srcColumn, destColumn, draggedItem) => {
+          const issue = draggedItem.attributes.row;
+          const newLabel = labels[destColumn];
+          if (issue.moscow === newLabel) return;
+
+          removeLabelToIssue(issue).then(response => {
+            if (newLabel === 'x') return;
+
+            addLabelToIssue(issue, newLabel).then(response => {
+              console.log(response);
+            });
+          });
+        }}
+      />
     );
   }
-}
+} 
 
 export default HomeScreen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    flexDirection: 'column',
-  },
-
-  name: {
-    fontSize: 16,
-    marginTop: 5,
-    color: '#CD7DDD',
-  },
-  RectangleShapeViewIssues: {
-    flex: 1,
-    borderColor: '#CD7DDD',
-    backgroundColor: '#78D17B',
-    padding: 5,
-  },
-  RectangleShapeViewIssue: {
-    flex: 1,
-    backgroundColor: '#CD7DDD',
-  },
-  box: {},
-  boxIssues: {
-    paddingTop: 30,
-    paddingBottom: 30,
-    backgroundColor: '#CD7DDD',
-  },
-  matrix: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  must: {
-    backgroundColor: '#78D17B',
-    flex: 1,
-  },
-  should: {
-    backgroundColor: '#7FA9E9',
-    flex: 1,
-  },
-  could: {
-    backgroundColor: '#E7DA6E',
-    flex: 1,
-  },
-  wont: {
-    backgroundColor: '#E86868',
-    flex: 1,
-  },
-});
