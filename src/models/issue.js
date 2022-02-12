@@ -1,5 +1,3 @@
-import {Moscow} from '../enum/moscow';
-
 export class Issue {
   selected = false;
   constructor(name, description, number, selected, moscow) {
@@ -7,6 +5,6 @@ export class Issue {
     this.description = description;
     this.id = number;
     this.selected = selected;
-    this.moscow = moscow;
+    this.label = moscow === undefined ? 'X' : moscow;
   }
 }

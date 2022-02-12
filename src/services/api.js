@@ -1,41 +1,40 @@
-import {Moscow} from '../src/enum/moscow';
-import {Issue} from '../src/model/Issue';
+import { Issue } from '../models/issue';
+import { API } from '@env'
 
-export function getIssuesFromApi() {
-  return fetch('http://52.88.52.11:3000/issues')
-    .then(response => response.json())
-    .catch(error => {
-      console.error(error);
-    });
+export async function getIssuesFromApi() {
+  try {
+    const response = await fetch(API + '/');
+    return response.json();
+  } catch(e) {
+    console.error('Error from getIssuesFromApi() => ' + e);
+  }
 }
 
-export function addLabelToIssue(issue, newLabel) {
-  return fetch('http://52.88.52.11:3000/issues/' + issue.id + "/" + newLabel, {
-    method: 'POST'
-  })
-    .then(response => response.json())
-    .catch(error => {
-      console.error(error);
-    });
+export async function addLabelToIssue(issue, newLabel) {
+  try {
+    const response = await fetch([API, issue.id, newLabel].join('/'), { method: 'POST' });
+    return response.json();
+  } catch(e) {
+    console.error('Error from addLabelToIssue() => ' + e);
+  }
 }
 
-export function removeLabelToIssue(issue) {
-  return fetch('http://52.88.52.11:3000/issues/' + issue.id + "/" + issue.moscow, {
-    method: 'DELETE'
-  })
-    .then(response => response.json())
-    .catch(error => {
-      console.error(error);
-    });
+export async function removeLabelToIssue(issue) {
+  try {
+    const response = await fetch([API, issue.id, issue.label].join('/'), { method: 'DELETE' });
+    return response.json();
+  } catch(e) {
+    console.error('Error from removeLabelToIssue() => ' + e);
+  }
 }
 
 export function parseIssuesInfo(json) {
-  let data = [];
   let availableData = [];
   let mustData = [];
   let shouldData = [];
   let couldData = [];
   let wontData = [];
+  
   for (let i = 0; i < json.length; i++) {
     if (json[i].moscow === undefined) {
       availableData.push(
@@ -89,6 +88,6 @@ export function parseIssuesInfo(json) {
       );
     }
   }
-  data = [availableData, mustData, shouldData, couldData, wontData];
-  return data;
+
+  return [availableData, mustData, shouldData, couldData, wontData];
 }

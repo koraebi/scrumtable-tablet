@@ -15,6 +15,7 @@
     "install": "^0.13.0",
     "react": "16.9.0",
     "react-native": "^0.67.2",
+    "react-native-dotenv": "^3.3.1",
     "react-native-draganddrop-board": "^1.0.4",
     "react-native-draggable": "^3.3.0",
     "react-native-draggable-flatlist": "^3.0.5",
@@ -25,8 +26,8 @@
     "react-native-safe-area-context": "^3.3.2",
     "react-native-snap-carousel": "^3.9.1",
     "react-native-vector-icons": "^9.0.0",
-    "socket.io-client": "^2.4.0"
-  },
+    "socket.io-client": "^4.4.1"
+  }, 
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/runtime": "^7.12.5",
