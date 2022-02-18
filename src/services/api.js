@@ -12,7 +12,7 @@ export async function getIssuesFromApi() {
 
 export async function addLabelToIssue(issue, newLabel) {
   try {
-    const response = await fetch([API, issue.id, newLabel].join('/'), { method: 'POST' });
+    const response = await fetch([API, issue.number, newLabel].join('/'), { method: 'POST' });
     return response.json();
   } catch(e) {
     console.error('Error from addLabelToIssue() => ' + e);
@@ -21,7 +21,7 @@ export async function addLabelToIssue(issue, newLabel) {
 
 export async function removeLabelToIssue(issue) {
   try {
-    const response = await fetch([API, issue.id, issue.label].join('/'), { method: 'DELETE' });
+    const response = await fetch([API, issue.number, issue.label].join('/'), { method: 'DELETE' });
     return response.json();
   } catch(e) {
     console.error('Error from removeLabelToIssue() => ' + e);
@@ -44,6 +44,7 @@ export function parseIssuesInfo(json) {
           json[i].number,
           json[i].selected,
           json[i].moscow,
+          json[i].assignee,
         ),
       );
     } else if (json[i].moscow === 'Must') {
@@ -54,6 +55,7 @@ export function parseIssuesInfo(json) {
           json[i].number,
           json[i].selected,
           json[i].moscow,
+          json[i].assignee,
         ),
       );
     } else if (json[i].moscow === 'Should') {
@@ -64,6 +66,7 @@ export function parseIssuesInfo(json) {
           json[i].number,
           json[i].selected,
           json[i].moscow,
+          json[i].assignee,
         ),
       );
     } else if (json[i].moscow === 'Could') {
@@ -74,6 +77,7 @@ export function parseIssuesInfo(json) {
           json[i].number,
           json[i].selected,
           json[i].moscow,
+          json[i].assignee,
         ),
       );
     } else if (json[i].moscow === "Won't") {
@@ -84,6 +88,7 @@ export function parseIssuesInfo(json) {
           json[i].number,
           json[i].selected,
           json[i].moscow,
+          json[i].assignee,
         ),
       );
     }
