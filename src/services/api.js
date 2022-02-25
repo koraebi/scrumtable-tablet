@@ -36,7 +36,7 @@ export async function addLabel(issue, newLabel) {
 
 export async function removeLabels(issue) {
   try {
-    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issue.number + '/labels/' + issue.label, { 
+    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issue.number + '/labels', { 
       method: 'DELETE', 
       headers: new Headers({
         "Authorization": 'Bearer ' + GITHUB_PAT,
