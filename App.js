@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { View, Text, Alert } from 'react-native';
 import { SOCKET } from '@env'
-import { getIssuesFromApi, parseIssuesInfo, removeLabels, addLabel } from './src/services/api';
+import { getIssuesFromApi, parseIssuesInfo, addLabel, removeLabel } from './src/services/api';
 import { Board, BoardRepository } from 'react-native-draganddrop-board'
-
-console.log("Start 0"); 
+import { Issue } from './src/models/issue';
 
 const boardDataTemplate = [
   {
@@ -27,17 +26,10 @@ const boardDataTemplate = [
     id: 4,
     name: "Won't", 
     rows: []
-  }, 
-  {
-    id: 5,
-    name: "ToDos",
-    rows: []
   }
 ];
 
 export default function App()  {
-  console.log("Start 1"); 
-
   let lastMovedIssue;
   let boardRepository = new BoardRepository([]);
 
@@ -54,109 +46,112 @@ export default function App()  {
     socket.on('updateIssue', (message) => updateIssue(message));
     socket.on('lockTabletIssue', (issueNumber) => lockIssue(issueNumber, true));
     socket.on('unlockTabletIssue', (issueNumber) => lockIssue(issueNumber), false);
+
+    initBoard = async () => {
+      const json = await getIssuesFromApi();
+      const issues = await parseIssuesInfo(json); 
+      setBoardData([
+        {
+          id: 1, 
+          name: 'Must',  
+          rows: issues[0]
+        }, 
+        {
+          id: 2, 
+          name: 'Should',
+          rows: issues[1]
+        }, 
+        { 
+          id: 3,
+          name: 'Could',
+          rows: issues[2]
+        }, 
+        {
+          id: 4,
+          name: "Won't", 
+          rows: issues[3]
+        }
+      ]);
+    }
+    initBoard();
   }, []);
 
   useEffect(() => { 
-    if (boardData === boardDataTemplate) {
-      console.log('Initializing boardData');
-      initBoard = async () => {
-        const json = await getIssuesFromApi();
-        const issues = await parseIssuesInfo(json); 
-        setBoardData([
-          {
-            id: 1, 
-            name: 'Must',  
-            rows: issues[0]
-          }, 
-          {
-            id: 2, 
-            name: 'Should',
-            rows: issues[1]
-          }, 
-          { 
-            id: 3,
-            name: 'Could',
-            rows: issues[2]
-          }, 
-          {
-            id: 4,
-            name: "Won't", 
-            rows: issues[3]
-          }, 
-          {
-            id: 5,
-            name: "ToDos",
-            rows: issues[4]
-          }
-        ]);
-      }
-      initBoard();
-    } else { 
-      console.log('Updating boardData: ' + JSON.stringify(boardData));
-      boardRepository.updateData(boardData);
-      boardRepository.updateData(boardData);
-    }
+    console.log('Updating boardData');
+    boardRepository.updateData(boardData);
   }, [boardData]);
 
   updateIssue = (message) => {
     const action = message.action;
+
     if (action !== 'labeled' && action !== 'unlabeled') return;
 
     const updatedIssue = message.issue;
 
     if (lastMovedIssue && updatedIssue.number === lastMovedIssue.number) {
       lastMovedIssue = null;
-      return; 
+      return;
     }
 
-    for (let i = 0; i <= 4; i++) {
+    for (let i = 0; i <= 3; i++) {
       const index = boardData[i].rows.findIndex(issue => issue.number === updatedIssue.number);
+      
       if (index !== -1) {
-        let issue = boardData[i].rows[index];
         let data = [...boardData];
+        const issue = boardData[i].rows[index];
         data[i].rows.splice(index, 1); 
 
-        if (action === 'unlabeled') { 
-          console.log('Removing issue #' + issue.number + ' label ' + issue.label);
-          issue.label = '';
-          data[4].rows.push(issue);
-        } else {
-          console.log('Changing issue #' + issue.number + ' from label ' + issue.label + ' to ' + updatedIssue.labels[0].name);
+        if (action === 'labeled')  {
+          console.log('Labeling issue ' + issue.id + ' : ' + updatedIssue.labels[0].name);
           issue.label = updatedIssue.labels[0].name;
           switch(issue.label) {
             case 'Must':
               data[0].rows.push(issue);
-              console.log('pushed to Must');
               break;
             case 'Should':
               data[1].rows.push(issue);
-              console.log('pushed to Should');
               break;
             case 'Could':
               data[2].rows.push(issue);
-              console.log('pushed to Could');
               break;
             case "Won't":
               data[3].rows.push(issue);
-              console.log('pushed to Wont');
           }
         }
 
         setBoardData(data);
         return;
-      }  
+      }
+    }
+
+    if (action === 'labeled') {
+      let data = [...boardData];
+      const issue = new Issue(updatedIssue.title, updatedIssue.body, updatedIssue.number, updatedIssue.labels[0].name, updatedIssue.assignee);
+      switch(issue.label) {
+        case 'Must':
+          data[0].rows.push(issue);
+          break;
+        case 'Should':
+          data[1].rows.push(issue);
+          break;
+        case 'Could':
+          data[2].rows.push(issue);
+          break;
+        case "Won't":
+          data[3].rows.push(issue);
+      }
+
+      setBoardData(data);
     }
   }
 
   lockIssue = (issueNumber, lock) => {
     console.log('Locking issue #' + issueNumber);
-    for (let i = 0; i <= 4; i++) {
+    for (let i = 0; i <= 3; i++) {
       const index = boardData[i].rows.findIndex(issue => issue.number.toString() === issueNumber);
       if (index !== -1) {
         let data = [...boardData];
         data[i].rows[index].selectionColor = lock ? "red" : "#4734D3"; 
-        console.log('Locked' + issueNumber);
-
         setBoardData(data);
         return;
       }  
@@ -167,27 +162,29 @@ export default function App()  {
     const issue = draggedItem.attributes.row;
     const newLabel = boardData[destColumn - 1].name;
 
-    if ((issue.label === newLabel) || (issue.label === '' && newLabel === 'ToDos')) return;
+    if (issue.label === newLabel) return;
 
-    if (newLabel === "ToDos") {
-      await removeLabels(issue);
-    } else {
-      await addLabel(issue, newLabel);
-    } 
+    await removeLabel(issue);
+    await addLabel(issue, newLabel);
  
     lastMovedIssue = issue;
   }
 
   onIssueTouched = (issue) => {
-    let description = issue.description ?? "";
-    if (issue.assigneeName) {
-      description += "\n\nAssigné à : " + issue.assigneeName
-    }
+    let title = issue.id + "  " + issue.name;
 
+    let description = "𝗧𝗶𝘁𝗿𝗲 :\n" + issue.name + "\n\n𝗗𝗲𝘀𝗰𝗿𝗶𝗽𝘁𝗶𝗼𝗻 :\n" + issue.description;
+    if (issue.label !== '') {
+      description += "\n\n𝗟𝗮𝗯𝗲𝗹 : " + issue.label;
+    }
+    if (issue.assigneeName) {
+      description += "\n\n𝗥𝗲𝘀𝗽𝗼𝗻𝘀𝗮𝗯𝗹𝗲 : " + issue.assigneeName
+    }
+ 
     Alert.alert( 
-      issue.id + "  " + issue.name,
+      title,
       description,
-    )
+    ) 
   }
 
   return (

@@ -34,10 +34,10 @@ export async function addLabel(issue, newLabel) {
   }
 }
 
-export async function removeLabels(issue) {
+export async function removeLabel(issue) {
   try {
-    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issue.number + '/labels', { 
-      method: 'DELETE', 
+    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issue.number + '/labels/' + issue.label, { 
+      method: 'DELETE',
       headers: new Headers({
         "Authorization": 'Bearer ' + GITHUB_PAT,
         'Content-Type': 'application/json'
@@ -46,7 +46,7 @@ export async function removeLabels(issue) {
 
     return response.json();
   } catch(e) {
-    console.error('Error from removeLabels() => ' + e);
+    console.error('Error from addLabel() => ' + e);
   }
 }
 
@@ -55,7 +55,6 @@ export async function parseIssuesInfo(json) {
   let shouldIssues = [];
   let couldIssues = [];
   let wontIssues = [];
-  let todoIssues = [];
   
   for (let i = 0; i < json.length; i++) {
     if (json[i].labels.length) {
@@ -100,17 +99,8 @@ export async function parseIssuesInfo(json) {
           )
         );
       }
-    } else if (todoIssues.length < 5) {
-      todoIssues.push(
-        new Issue(
-          json[i].title,
-          json[i].body,
-          json[i].number,
-          "",
-          json[i].assignee
-      ))
     }
   }
 
-  return [mustIssues, shouldIssues, couldIssues, wontIssues, todoIssues];
+  return [mustIssues, shouldIssues, couldIssues, wontIssues];
 }
