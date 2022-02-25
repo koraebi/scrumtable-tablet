@@ -30,8 +30,8 @@ const boardDataTemplate = [
 ];
 
 export default function App()  {
-  let lastMovedIssue;
   let boardRepository = new BoardRepository([]);
+  let isEditingLabel = false;
 
   const [boardData, setBoardData] = useState(boardDataTemplate);
  
@@ -82,6 +82,8 @@ export default function App()  {
   }, [boardData]);
 
   updateIssue = (message) => {
+    if (isEditingLabel) return;
+    
     const action = message.action;
 
     if (action !== 'labeled' && action !== 'unlabeled') return;
@@ -164,10 +166,10 @@ export default function App()  {
 
     if (issue.label === newLabel) return;
 
+    isEditingLabel = true;
     await removeLabel(issue);
     await addLabel(issue, newLabel);
- 
-    lastMovedIssue = issue;
+    isEditingLabel = false;
   }
 
   onIssueTouched = (issue) => {
