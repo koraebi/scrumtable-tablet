@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
-import { View, Alert, StyleSheet, Text, Modal, ScrollView, Image, Pressable } from 'react-native';
+import { View, StyleSheet, Text, Modal, ScrollView, Image, Pressable } from 'react-native';
 import { SOCKET } from '@env'
 import { getIssuesFromApi, parseIssuesInfo, setLabel } from './src/services/api';
 import { Board, BoardRepository } from 'react-native-draganddrop-board'
@@ -41,7 +41,7 @@ export default function App()  {
 
     const socket = io.connect(SOCKET, {
       transports: ['websocket'], 
-      forceNew: true,
+      forceNew: false,
       reconnectionAttempts: 100,
     }); 
     socket.on('updateIssue', (message) => updateIssue(message));
@@ -134,6 +134,7 @@ export default function App()  {
       if (index !== -1) {
         let data = [...boardData];
         data[i].rows[index].selectionColor = lock ? "red" : "#4734D3"; 
+        data[i].rows[index].displayHand = lock ? "flex" : "none"; 
         boardRepository.updateData(data);
         setBoardData(data);
         break;
@@ -188,6 +189,10 @@ export default function App()  {
             borderWidth: 0.5}}
           >
             <View style={{flexDirection:'row'}}>
+              <Image 
+                source={require('./stop.png')}  
+                style={{width: 30, height: 30, marginRight: 10, display: issue.displayHand}} 
+              />
               <Text style={{
                 marginRight: 5,
                 alignSelf: 'center',
@@ -216,7 +221,7 @@ export default function App()  {
             <View style={styles.row}>
               <Text style={[styles.text, {fontSize: 30, marginRight: 5}]}>{selectedIssue.id}</Text>
 
-              <View style={[styles.label, {display: selectedIssue.displayLabel, right:1, position:'absolute', alignSelf: 'center', borderColor: selectedIssue.textColor, backgroundColor: selectedIssue.backgroundColor}]}>
+              <View style={[styles.label, {right:1, position:'absolute', alignSelf: 'center', borderColor: selectedIssue.textColor, backgroundColor: selectedIssue.backgroundColor}]}>
                 <Text style={[styles.textLabel, {color: selectedIssue.textColor}]}>{selectedIssue.label}</Text>
               </View>
             </View>
