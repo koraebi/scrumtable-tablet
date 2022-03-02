@@ -1,5 +1,5 @@
 import { Issue } from '../models/issue';
-import { API, GITHUB_PAT } from '@env'
+import { GITHUB_PAT } from '@env'
 
 export async function getIssuesFromApi() {
   try {
@@ -17,27 +17,11 @@ export async function getIssuesFromApi() {
   }
 }
 
-export async function addLabel(issue, newLabel) {
+export async function setLabel(issueNumber, newLabel) {
   try {
-    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issue.number + '/labels', { 
+    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issueNumber + '/labels', { 
       method: 'PUT', 
       body: JSON.stringify({labels: [newLabel]}),
-      headers: new Headers({
-        "Authorization": 'Bearer ' + GITHUB_PAT,
-        'Content-Type': 'application/json'
-      })
-    });
-
-    return response.json();
-  } catch(e) {
-    console.error('Error from addLabel() => ' + e);
-  }
-}
-
-export async function removeLabel(issue) {
-  try {
-    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issue.number + '/labels/' + issue.label, { 
-      method: 'DELETE',
       headers: new Headers({
         "Authorization": 'Bearer ' + GITHUB_PAT,
         'Content-Type': 'application/json'
@@ -58,7 +42,7 @@ export async function parseIssuesInfo(json) {
   
   for (let i = 0; i < json.length; i++) {
     if (json[i].labels.length) {
-      if (json[i].labels[0].name === 'Must' && mustIssues.length < 5) {
+      if (json[i].labels.findIndex(label => label.name === 'Must') !== -1) {
         mustIssues.push(
           new Issue(
             json[i].title,
@@ -68,7 +52,7 @@ export async function parseIssuesInfo(json) {
             json[i].assignee
           )
         );
-      } else if (json[i].labels[0].name === 'Should' && shouldIssues.length < 5) {
+      } else if (json[i].labels.findIndex(label => label.name === 'Should') !== -1) {
         shouldIssues.push(
           new Issue(
             json[i].title,
@@ -78,17 +62,17 @@ export async function parseIssuesInfo(json) {
             json[i].assignee
           )
         );
-      } else if (json[i].labels[0].name === 'Could' && couldIssues.length < 5) {
+      } else if (json[i].labels.findIndex(label => label.name === 'Could') !== -1) {
         couldIssues.push(
           new Issue(
             json[i].title,
             json[i].body,
             json[i].number,
-            'Should',
+            'Could',
             json[i].assignee
           )
         );
-      } else if (json[i].labels[0].name === "Won't" && wontIssues.length < 5) {
+      } else if (json[i].labels.findIndex(label => label.name === "Won't") !== -1) {
         wontIssues.push(
           new Issue(
             json[i].title,
