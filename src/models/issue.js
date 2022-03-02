@@ -1,17 +1,17 @@
 export class Issue {
   selected = false;
-  constructor(name, description, number, selected, moscow, assignee) {
+  constructor(name, description, number, label, assignee) {
     this.name = name;
     this.number = number;
     this.description = description;
     this.id = '#' + number;
-    this.selected = selected;
-    this.label = moscow === undefined ? 'X' : moscow;
+    this.label = label;
+    this.displayHand = 'none';
     this.displayAssignee = assignee?.login ? 'flex' : 'none';
     this.assigneeAvatarUrl = assignee?.avatar_url ?? 'https://avatars.githubusercontent.com/u/54991044?s=40&v=4';
     this.assigneeName = assignee?.login ?? '';
     this.selectionColor = "#4734D3";
-    switch(moscow) {
+    switch(label) {
       case 'Must': 
         this.textColor = '#5AA7EA';
         this.backgroundColor = '#10233B';

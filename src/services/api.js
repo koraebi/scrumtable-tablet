@@ -1,98 +1,90 @@
 import { Issue } from '../models/issue';
-import { API } from '@env'
+import { GITHUB_PAT } from '@env'
 
 export async function getIssuesFromApi() {
   try {
-    const response = await fetch(API + '/');
+    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues', { 
+      method: 'GET', 
+      headers: new Headers({
+        "Authorization": 'Bearer ' + GITHUB_PAT,
+        'Content-Type': 'application/json'
+      })
+    });
+    
     return response.json();
   } catch(e) {
-    console.error('Error from getIssuesFromApi() => ' + e);
+    console.error('Error from getIssuesFromApi() => ' + e); 
   }
 }
 
-export async function addLabelToIssue(issue, newLabel) {
+export async function setLabel(issueNumber, newLabel) {
   try {
-    const response = await fetch([API, issue.number, newLabel].join('/'), { method: 'POST' });
+    const response = await fetch('https://api.github.com/repos/Scrumtable/web/issues/' + issueNumber + '/labels', { 
+      method: 'PUT', 
+      body: JSON.stringify({labels: [newLabel]}),
+      headers: new Headers({
+        "Authorization": 'Bearer ' + GITHUB_PAT,
+        'Content-Type': 'application/json'
+      })
+    });
+
     return response.json();
   } catch(e) {
-    console.error('Error from addLabelToIssue() => ' + e);
+    console.error('Error from addLabel() => ' + e);
   }
 }
 
-export async function removeLabelToIssue(issue) {
-  try {
-    const response = await fetch([API, issue.number, issue.label].join('/'), { method: 'DELETE' });
-    return response.json();
-  } catch(e) {
-    console.error('Error from removeLabelToIssue() => ' + e);
-  }
-}
-
-export function parseIssuesInfo(json) {
-  let availableData = [];
-  let mustData = [];
-  let shouldData = [];
-  let couldData = [];
-  let wontData = [];
+export async function parseIssuesInfo(json) { 
+  let mustIssues = [];
+  let shouldIssues = [];
+  let couldIssues = [];
+  let wontIssues = [];
   
   for (let i = 0; i < json.length; i++) {
-    if (json[i].moscow === undefined) {
-      availableData.push(
-        new Issue(
-          json[i].name,
-          json[i].description,
-          json[i].number,
-          json[i].selected,
-          json[i].moscow,
-          json[i].assignee,
-        ),
-      );
-    } else if (json[i].moscow === 'Must') {
-      mustData.push(
-        new Issue(
-          json[i].name,
-          json[i].description,
-          json[i].number,
-          json[i].selected,
-          json[i].moscow,
-          json[i].assignee,
-        ),
-      );
-    } else if (json[i].moscow === 'Should') {
-      shouldData.push(
-        new Issue(
-          json[i].name,
-          json[i].description,
-          json[i].number,
-          json[i].selected,
-          json[i].moscow,
-          json[i].assignee,
-        ),
-      );
-    } else if (json[i].moscow === 'Could') {
-      couldData.push(
-        new Issue(
-          json[i].name,
-          json[i].description,
-          json[i].number,
-          json[i].selected,
-          json[i].moscow,
-          json[i].assignee,
-        ),
-      );
-    } else if (json[i].moscow === "Won't") {
-      wontData.push(
-        new Issue(
-          json[i].name,
-          json[i].description,
-          json[i].number,
-          json[i].selected,
-          json[i].moscow,
-          json[i].assignee,
-        ),
-      );
+    if (json[i].labels.length) {
+      if (json[i].labels.findIndex(label => label.name === 'Must') !== -1) {
+        mustIssues.push(
+          new Issue(
+            json[i].title,
+            json[i].body,
+            json[i].number,
+            'Must',
+            json[i].assignee
+          )
+        );
+      } else if (json[i].labels.findIndex(label => label.name === 'Should') !== -1) {
+        shouldIssues.push(
+          new Issue(
+            json[i].title,
+            json[i].body,
+            json[i].number,
+            'Should',
+            json[i].assignee
+          )
+        );
+      } else if (json[i].labels.findIndex(label => label.name === 'Could') !== -1) {
+        couldIssues.push(
+          new Issue(
+            json[i].title,
+            json[i].body,
+            json[i].number,
+            'Could',
+            json[i].assignee
+          )
+        );
+      } else if (json[i].labels.findIndex(label => label.name === "Won't") !== -1) {
+        wontIssues.push(
+          new Issue(
+            json[i].title,
+            json[i].body,
+            json[i].number,
+            "Won't",
+            json[i].assignee
+          )
+        );
+      }
     }
   }
 
-  return [availableData, mustData, shouldData, couldData, wontData];
+  return [mustIssues, shouldIssues, couldIssues, wontIssues];
 }
